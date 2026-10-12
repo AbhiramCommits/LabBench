@@ -1,0 +1,82 @@
+lab:
+  name: dev-lab
+  description: Mixed Linux/Windows iSCSI storage test lab (2 paths, 1 target)
+  simulator_url: http://127.0.0.1:8080
+  networks:
+    path-a: 172.28.0.0/24
+    path-b: 172.29.0.0/24
+
+hosts:
+  - name: linux-host-1
+    os_family: linux
+    address: 127.0.0.1
+    user: root
+    connection: ssh
+    roles:
+      - common_linux
+      - tuning
+    tags:
+      port: 2201
+      container: linux-host-1
+      password: labbench
+      expected_os: ubuntu
+      disk_timeout_s: 60
+
+  - name: linux-host-2
+    os_family: linux
+    address: 127.0.0.1
+    user: root
+    connection: ssh
+    roles:
+      - common_linux
+      - tuning
+    tags:
+      port: 2202
+      container: linux-host-2
+      password: labbench
+      expected_os: ubuntu
+      disk_timeout_s: 60
+
+  - name: win-host-1
+    os_family: windows
+    address: 127.0.0.1
+    user: Administrator
+    connection: winrm
+    roles:
+      - common_windows
+      - tuning
+    tags:
+      port: 55985
+      container: win-host-1
+      password: labbench
+      expected_os: windows
+      disk_timeout_s: 60
+
+  - name: win-host-2
+    os_family: windows
+    address: 127.0.0.1
+    user: Administrator
+    connection: winrm
+    roles:
+      - common_windows
+      - tuning
+    tags:
+      port: 55986
+      container: win-host-2
+      password: labbench
+      expected_os: windows
+      disk_timeout_s: 60
+
+targets:
+  - name: storage-target
+    iqn: iqn.2026-01.labbench:storage.target1
+    luns:
+      - id: 0
+        size_gb: 8
+        backstore: fileio
+      - id: 1
+        size_gb: 16
+        backstore: fileio
+    portals:
+      - 172.28.0.10:3260
+      - 172.29.0.10:3260

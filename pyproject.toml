@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labbench"
+version = "0.1.0"
+description = "Cross-platform storage test-lab provisioner and validation harness"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "LabBench Contributors" }]
+keywords = ["storage", "iscsi", "multipath", "ansible", "pytest", "winrm", "lab"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
+dependencies = [
+    "click>=8.1",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
+    "jsonschema>=4.20",
+    "paramiko>=3.4",
+    "pywinrm>=0.4.3",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-xdist>=3.5",
+    "pytest-timeout>=2.2",
+    "ruff>=0.4",
+    "black>=24.3",
+    "ansible-core>=2.16",
+    "ansible-lint>=24.2",
+    "pywinrm>=0.4.3",
+]
+
+[project.scripts]
+labbench = "labbench.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "integration: tests that require a running Docker lab",
+    "e2e: full end-to-end lab tests",
+]
+timeout = 900
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["E501", "B008"]

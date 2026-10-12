@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+
+# Test / coverage / lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# LabBench generated artifacts & logs
+artifacts/
+logs/
+*.log
+
+# Ansible
+ansible/*.retry
+ansible/roles/*/files/*.retry
+*.retry
+
+# Docker
+docker/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+.idea/
+.vscode/

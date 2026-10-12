@@ -1,0 +1,15 @@
+# LabBench development / CI dependencies
+-r requirements.txt
+
+pytest>=7.4
+pytest-xdist>=3.5
+pytest-timeout>=2.2
+ruff>=0.4
+black>=24.3
+
+# Ansible control node
+ansible-core>=2.16
+ansible-lint>=24.2
+
+# Windows remote management
+pywinrm>=0.4.3
