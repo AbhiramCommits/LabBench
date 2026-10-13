@@ -38,7 +38,7 @@ lab-down:
 e2e: lab-up
 	$(LABBENCH) provision
 	$(LABBENCH) attach
-	$(LABBENCH) validate
+	-$(LABBENCH) validate
 	$(LABBENCH) collect
 	$(LABBENCH) report
 

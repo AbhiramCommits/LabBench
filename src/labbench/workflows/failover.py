@@ -1,6 +1,6 @@
 """Multipath failover workflow with recovery-time measurement.
 
-For each host and N iterations: sever path A, continuously probe I/O and
+For each host and N iterations: sever path A, continuously poll I/O and
 measure the time until I/O resumes on the surviving path, then restore path A
 and measure the time until both paths are active again. Results (min/median/
 max/p95) are written to ``artifacts/failover_<timestamp>.json``. Corrupted
@@ -13,7 +13,6 @@ from __future__ import annotations
 import json
 import math
 import statistics
-import threading
 import time
 from collections.abc import Callable
 from typing import Any
@@ -28,64 +27,24 @@ from .attach import MOUNT_PATH
 log = get_logger("failover")
 
 
-class IOMonitor(threading.Thread):
-    """Continuously probe I/O and record (timestamp, ok) samples."""
+def _poll_until_recovery(
+    driver: Any, t_down: float, window_s: float, interval_s: float
+) -> tuple[float | None, int]:
+    """Poll I/O until it succeeds again. Returns (recovery_seconds, io_errors)."""
 
-    def __init__(self, driver: Any, interval_s: float) -> None:
-        super().__init__(daemon=True)
-        self.driver = driver
-        self.interval = interval_s
-        self.samples: list[tuple[float, bool]] = []
-        self._stop_event = threading.Event()
-        self._lock = threading.Lock()
-
-    def run(self) -> None:
-        while not self._stop_event.is_set():
-            t = time.monotonic()
-            try:
-                result = self.driver.io_probe()
-                ok = bool(result.get("ok"))
-            except Exception:  # noqa: BLE001
-                ok = False
-            with self._lock:
-                self.samples.append((t, ok))
-            self._stop_event.wait(self.interval)
-
-    def stop(self) -> list[tuple[float, bool]]:
-        self._stop_event.set()
-        self.join(timeout=5)
-        with self._lock:
-            return list(self.samples)
-
-    def recovery_after(self, t0: float) -> float | None:
-        """Seconds from ``t0`` until I/O resumes, requiring a prior failure."""
-
-        seen_failure = False
-        with self._lock:
-            samples = list(self.samples)
-        for t, ok in samples:
-            if t < t0:
-                continue
-            if not ok:
-                seen_failure = True
-            elif seen_failure:
-                return t - t0
-        return None
-
-    def failures_after(self, t0: float) -> int:
-        with self._lock:
-            return sum(1 for t, ok in self.samples if t >= t0 and not ok)
-
-    def wait_for_recovery(self, t0: float, timeout_s: float, poll_s: float = 0.01) -> float | None:
-        """Poll until I/O resumes after an outage that started at ``t0``."""
-
-        deadline = time.monotonic() + timeout_s
-        while time.monotonic() < deadline:
-            recovery = self.recovery_after(t0)
-            if recovery is not None:
-                return recovery
-            time.sleep(poll_s)
-        return self.recovery_after(t0)
+    deadline = t_down + window_s + 5.0
+    errors = 0
+    while time.monotonic() < deadline:
+        t = time.monotonic()
+        try:
+            ok = bool(driver.io_probe().get("ok"))
+        except Exception:  # noqa: BLE001
+            ok = False
+        if ok:
+            return t - t_down, errors
+        errors += 1
+        time.sleep(interval_s)
+    return None, errors
 
 
 def _limit(fo: dict[str, Any], os_family: str, key: str) -> float:
@@ -131,19 +90,15 @@ def _failover_host(
 
     for i in range(iterations):
         driver.wait_for_active_paths(2, timeout_s=15)
-        monitor = IOMonitor(driver, probe_interval_s)
-        monitor.start()
-        time.sleep(0.1)  # let the monitor establish a success baseline
+        driver.io_probe()  # warm the connection and confirm I/O is healthy
 
         t_down = time.monotonic()
         driver.fail_path(portal_a)
-        recovery = monitor.wait_for_recovery(t_down, timeout_s=window_s + 1.0)
-        errors = monitor.failures_after(t_down)
+        recovery, errors = _poll_until_recovery(driver, t_down, window_s, probe_interval_s)
 
         t_restore = time.monotonic()
         driver.restore_path(portal_a)
-        restore_s = driver.wait_for_active_paths(2, timeout_s=15)
-        samples = monitor.stop()
+        restore_s = driver.wait_for_active_paths(2, timeout_s=20)
         restore_s = max(restore_s, time.monotonic() - t_restore)
 
         per_iteration.append(
@@ -152,7 +107,6 @@ def _failover_host(
                 "recovery_ms": round(recovery * 1000, 2) if recovery is not None else None,
                 "restore_ms": round(restore_s * 1000, 2),
                 "io_errors": errors,
-                "samples": len(samples),
             }
         )
         total_errors += errors
@@ -160,7 +114,7 @@ def _failover_host(
             recoveries.append(recovery)
         restores.append(restore_s)
         if recovery is None or recovery > window_s:
-            corrupted = True  # I/O did not resume within no_path_retry window
+            corrupted = True  # I/O did not resume within the no_path_retry window
 
     final = driver.write_verify(MOUNT_PATH, 64)
     if final.get("checksum") != baseline_checksum or not final.get("ok"):
