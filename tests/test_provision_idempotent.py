@@ -63,13 +63,11 @@ def test_provision_is_idempotent() -> None:
 
     try:
         first = run_provision(lab)
-        assert first["playbook"]["failed"] == 0, (
-            f"first provision run failed: {first['playbook']}"
-        )
+        assert first["playbook"]["failed"] == 0, f"first provision run failed: {first['playbook']}"
         second = run_provision(lab)
-        assert second["playbook"]["failed"] == 0, (
-            f"second provision run failed: {second['playbook']}"
-        )
+        assert (
+            second["playbook"]["failed"] == 0
+        ), f"second provision run failed: {second['playbook']}"
         assert second["playbook"]["changed"] == 0, (
             "provisioning is not idempotent; second run reported "
             f"changed={second['playbook']['changed']} "

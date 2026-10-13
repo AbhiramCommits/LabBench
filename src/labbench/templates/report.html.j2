@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>LabBench Validation Report</title>
+  <style>
+    :root { --ok:#1a7f37; --bad:#cf222e; --muted:#57606a; --border:#d0d7de; }
+    body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+           margin: 2rem auto; max-width: 1080px; color:#1f2328; }
+    h1 { border-bottom: 2px solid var(--border); padding-bottom: .4rem; }
+    h2 { margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: .25rem; }
+    table { border-collapse: collapse; width: 100%; margin: .75rem 0; }
+    th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; font-size: 14px; }
+    th { background: #f6f8fa; }
+    .pass { color: var(--ok); font-weight: 600; }
+    .fail { color: var(--bad); font-weight: 600; }
+    .meta { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .meta div { background:#f6f8fa; border:1px solid var(--border); border-radius:6px; padding:.5rem .9rem; }
+    code { background:#f6f8fa; padding:1px 5px; border-radius:4px; }
+    .none { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>LabBench Validation Report</h1>
+  <div class="meta">
+    <div><strong>Run:</strong> {{ run_timestamp }}</div>
+    <div><strong>Mode:</strong> <code>{{ mode }}</code></div>
+    <div><strong>Lab:</strong> {{ lab_name }}</div>
+    <div><strong>Result:</strong>
+      <span class="{{ 'fail' if totals.failed else 'pass' }}">
+        {{ totals.passed }} passed / {{ totals.failed }} failed / {{ totals.skipped }} skipped
+      </span>
+    </div>
+  </div>
+
+  <h2>Per-host pass/fail matrix</h2>
+  <table>
+    <thead><tr><th>host</th><th>os_family</th><th>passed</th><th>failed</th><th>skipped</th><th>total</th></tr></thead>
+    <tbody>
+      {% for row in matrix %}
+      <tr>
+        <td>{{ row.host }}</td><td>{{ row.os_family }}</td><td>{{ row.passed }}</td>
+        <td class="{{ 'fail' if row.failed else '' }}">{{ row.failed }}</td>
+        <td>{{ row.skipped }}</td><td>{{ row.total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Multipath failover recovery times (ms)</h2>
+  {% if failover %}
+  <table>
+    <thead><tr>
+      <th>host</th><th>os_family</th><th>min</th><th>median</th><th>p95</th><th>max</th>
+      <th>restore median</th><th>io_errors</th><th>corrupted</th><th>pass</th>
+    </tr></thead>
+    <tbody>
+      {% for row in failover %}
+      <tr>
+        <td>{{ row.host }}</td><td>{{ row.os_family }}</td>
+        <td>{{ row.recovery_min }}</td><td>{{ row.recovery_median }}</td>
+        <td>{{ row.recovery_p95 }}</td><td>{{ row.recovery_max }}</td>
+        <td>{{ row.restore_median }}</td><td>{{ row.io_errors }}</td><td>{{ row.corrupted }}</td>
+        <td class="{{ 'pass' if row.pass else 'fail' }}">{{ row.pass }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="none">No failover artifact found.</p>{% endif %}
+
+  <h2>Configuration drift</h2>
+  {% if drift %}<ul>{% for d in drift %}<li>{{ d }}</li>{% endfor %}</ul>
+  {% else %}<p class="none">none</p>{% endif %}
+
+  <h2>TRIAGE</h2>
+  {% if triage %}
+  <table>
+    <thead><tr>
+      <th>os_family</th><th>failing case</th><th>error signature</th><th>hosts</th>
+      <th>suspected cause</th><th>rerun</th>
+    </tr></thead>
+    <tbody>
+      {% for t in triage %}
+      <tr>
+        <td>{{ t.os_family }}</td><td>{{ t.case }}</td><td>{{ t.error_signature }}</td>
+        <td>{{ t.hosts }}</td><td>{{ t.suspected_cause }}</td><td><code>{{ t.rerun }}</code></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="pass">No failures. All configurations passed.</p>{% endif %}
+
+  {% if provision %}
+  <h2>Provisioning recap</h2>
+  <p>ok={{ provision.ok }} changed={{ provision.changed }} failed={{ provision.failed }}
+     unreachable={{ provision.unreachable }} duration={{ '%.2f'|format(provision.duration_seconds or 0) }}s</p>
+  {% endif %}
+</body>
+</html>

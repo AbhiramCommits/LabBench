@@ -83,4 +83,4 @@ def timestamp() -> str:
 
     import datetime as _dt
 
-    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%S%fZ")

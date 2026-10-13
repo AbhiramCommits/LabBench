@@ -43,9 +43,7 @@ def _case_paths(only: list[str] | None) -> list[str]:
         elif item in CASE_FILES:
             files.append(str(vdir / CASE_FILES[item]))
         else:
-            raise ValueError(
-                f"unknown validation case {item!r}; known: {sorted(CASE_FILES)}"
-            )
+            raise ValueError(f"unknown validation case {item!r}; known: {sorted(CASE_FILES)}")
     return files
 
 
@@ -92,7 +90,17 @@ def run_validation(
     junit = paths.artifacts_dir() / "junit.xml"
     targets = _case_paths(only)
 
-    args = [sys.executable, "-m", "pytest", *targets, f"--junitxml={junit}", "-p", "no:cacheprovider", "-o", "addopts="]
+    args = [
+        sys.executable,
+        "-m",
+        "pytest",
+        *targets,
+        f"--junitxml={junit}",
+        "-p",
+        "no:cacheprovider",
+        "-o",
+        "addopts=",
+    ]
     if numprocesses:
         args += ["-n", str(numprocesses)]
 
@@ -113,5 +121,11 @@ def run_validation(
         "output": (proc.stdout or "") + (proc.stderr or ""),
         **totals,
     }
-    log_event(log, "validate_done", passed=totals["passed"], failed=totals["failed"], total=totals["total"])
+    log_event(
+        log,
+        "validate_done",
+        passed=totals["passed"],
+        failed=totals["failed"],
+        total=totals["total"],
+    )
     return result

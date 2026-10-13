@@ -59,17 +59,13 @@ def test_valid_load_dev_lab() -> None:
 
 
 def test_default_connection_for_linux() -> None:
-    lab = load_lab_str(
-        textwrap.dedent(
-            """
+    lab = load_lab_str(textwrap.dedent("""
             hosts:
               - name: l1
                 os_family: linux
                 address: 10.0.0.1
             targets: []
-            """
-        )
-    )
+            """))
     assert lab.host("l1").connection == "ssh"
     assert lab.host("l1").port == 22
 

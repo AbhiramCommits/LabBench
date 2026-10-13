@@ -15,7 +15,8 @@ import math
 import statistics
 import threading
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .. import paths
 from ..drivers import driver_for
@@ -87,6 +88,12 @@ class IOMonitor(threading.Thread):
         return self.recovery_after(t0)
 
 
+def _limit(fo: dict[str, Any], os_family: str, key: str) -> float:
+    """Return the per-OS override for a failover guardrail, else the global one."""
+
+    return float(fo.get("by_os", {}).get(os_family, {}).get(key, fo[key]))
+
+
 def _stats(values: list[float]) -> dict[str, float | None]:
     clean = [v for v in values if v is not None]
     if not clean:
@@ -137,6 +144,7 @@ def _failover_host(
         driver.restore_path(portal_a)
         restore_s = driver.wait_for_active_paths(2, timeout_s=15)
         samples = monitor.stop()
+        restore_s = max(restore_s, time.monotonic() - t_restore)
 
         per_iteration.append(
             {
@@ -197,12 +205,15 @@ def run_failover(
             report.update(result)
             rec = result["recovery_ms"]
             rst = result["restore_ms"]
+            rec_limit = _limit(fo, host.os_family, "recovery_p95_ms")
+            rst_limit = _limit(fo, host.os_family, "restore_p95_ms")
+            report["thresholds"] = {"recovery_p95_ms": rec_limit, "restore_p95_ms": rst_limit}
             report["pass"] = (
                 not result["corrupted"]
                 and rec["p95"] is not None
-                and rec["p95"] <= fo["recovery_p95_ms"]
+                and rec["p95"] <= rec_limit
                 and rst["p95"] is not None
-                and rst["p95"] <= fo["restore_p95_ms"]
+                and rst["p95"] <= rst_limit
             )
         except Exception as exc:  # noqa: BLE001
             report["error"] = f"{type(exc).__name__}: {exc}"

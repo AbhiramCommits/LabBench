@@ -73,7 +73,13 @@ def run_provision(lab: Lab, limit: str | None = None, check: bool = False) -> di
     start = time.monotonic()
     log_event(log, "ansible_start", cmd=" ".join(cmd), cwd=str(ansible_dir))
     proc = subprocess.run(
-        cmd, cwd=str(ansible_dir), env=env, capture_output=True, text=True, timeout=3600, check=False
+        cmd,
+        cwd=str(ansible_dir),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=3600,
+        check=False,
     )
     duration = time.monotonic() - start
     output = (proc.stdout or "") + "\n" + (proc.stderr or "")

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from fakes import FakeDriver
 from labbench.thresholds import load_thresholds
 from labbench.topology import Host, Lab, Lun, Target
 from labbench.workflows.attach import run_attach
 from labbench.workflows.failover import run_failover
-
-from fakes import FakeDriver
 
 
 def _lab() -> Lab:

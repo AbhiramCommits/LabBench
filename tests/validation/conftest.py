@@ -23,8 +23,8 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def _resolve_lab(config: pytest.Config):
-    lab_path = config.getoption("--lab") or os.environ.get("LABBENCH_LAB") or str(
-        paths.default_lab_path()
+    lab_path = (
+        config.getoption("--lab") or os.environ.get("LABBENCH_LAB") or str(paths.default_lab_path())
     )
     lab = load_lab(lab_path)
     host_filter = config.getoption("--hosts") or os.environ.get("LABBENCH_HOSTS")
@@ -48,6 +48,15 @@ def lab(request: pytest.FixtureRequest):
 @pytest.fixture(scope="session")
 def thresholds():
     return load_thresholds()
+
+
+@pytest.fixture(scope="session")
+def failover_session(lab, thresholds):
+    """Run the full N-iteration failover for every host exactly once."""
+
+    from labbench.workflows.failover import run_failover
+
+    return run_failover(lab, iterations=thresholds["failover"]["iterations"], thresholds=thresholds)
 
 
 @pytest.fixture

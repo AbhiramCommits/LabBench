@@ -162,7 +162,10 @@ class WindowsWinRMDriver(HostDriver):
             f"$p='{path}\\labbench_io.bin'; "
             f"$b=[byte[]]::new(1MB); (Get-FileHash -Algorithm MD5 $p).Hash"
         )
-        return {"ok": res.ok, "checksum": res.stdout.strip().splitlines()[-1] if res.stdout else None}
+        return {
+            "ok": res.ok,
+            "checksum": res.stdout.strip().splitlines()[-1] if res.stdout else None,
+        }
 
     def unmount(self, path: str) -> dict[str, Any]:
         if self.mode == "simulated":

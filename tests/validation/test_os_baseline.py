@@ -1,6 +1,5 @@
 """OS baseline: host reachable, expected family/version range, time sync."""
 
-
 from __future__ import annotations
 
 import re

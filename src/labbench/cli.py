@@ -14,9 +14,9 @@ Top-level commands::
 
 from __future__ import annotations
 
-import sys
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 import click
 
@@ -99,8 +99,7 @@ def lab_up(ctx: click.Context, timeout: int, no_build: bool) -> None:
     lab_obj = _load_lab_or_die(ctx)
     result = up(lab_obj, timeout=timeout, build=not no_build)
     click.echo(
-        f"lab '{lab_obj.name}' up in {result['bringup_seconds']:.1f}s "
-        f"(mode: {result['mode']})"
+        f"lab '{lab_obj.name}' up in {result['bringup_seconds']:.1f}s " f"(mode: {result['mode']})"
     )
     for svc in result["services"]:
         click.echo(f"  {svc['name']:<16} {svc['state']:<10} {svc['detail']}")
@@ -155,7 +154,7 @@ def lab_status(ctx: click.Context, as_json: bool) -> None:
     _print_table(
         ["name", "iqn", "portals", "luns"],
         [
-            [t.name, t.iqn, "; ".join(t.portals), ",".join(str(l.id) for l in t.luns)]
+            [t.name, t.iqn, "; ".join(t.portals), ",".join(str(lun.id) for lun in t.luns)]
             for t in lab_obj.targets
         ],
     )
@@ -257,13 +256,12 @@ def validate(
     click.echo(f"JUnit XML: {result['junit']}")
     _print_table(
         ["host", "passed", "failed", "skipped", "total"],
-        [
-            [h["host"], h["passed"], h["failed"], h["skipped"], h["total"]]
-            for h in result["matrix"]
-        ],
+        [[h["host"], h["passed"], h["failed"], h["skipped"], h["total"]] for h in result["matrix"]],
     )
-    click.echo(f"TOTAL: passed={result['passed']} failed={result['failed']} "
-               f"skipped={result['skipped']} total={result['total']}")
+    click.echo(
+        f"TOTAL: passed={result['passed']} failed={result['failed']} "
+        f"skipped={result['skipped']} total={result['total']}"
+    )
     if result["failed"]:
         raise SystemExit(3)
 

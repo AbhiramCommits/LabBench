@@ -73,7 +73,9 @@ class LinuxSSHDriver(HostDriver):
         res = self.run(" ".join(parts))
         text = res.stdout.strip()
         if not text:
-            raise DriverError(f"{self.name}: agent {action} produced no output: {res.stderr.strip()}")
+            raise DriverError(
+                f"{self.name}: agent {action} produced no output: {res.stderr.strip()}"
+            )
         try:
             return json.loads(text.splitlines()[-1])
         except json.JSONDecodeError as exc:
@@ -85,7 +87,7 @@ class LinuxSSHDriver(HostDriver):
     def os_info(self) -> dict[str, Any]:
         if self.mode == "simulated":
             return self._agent("info")
-        res = self.run(". /etc/os-release; echo \"$PRETTY_NAME\"; uname -r; nproc")
+        res = self.run('. /etc/os-release; echo "$PRETTY_NAME"; uname -r; nproc')
         lines = res.stdout.strip().splitlines()
         return {
             "ok": res.ok,
@@ -185,7 +187,9 @@ class LinuxSSHDriver(HostDriver):
         if self.mode == "simulated":
             return self._agent("restore", portal=portal)
         addr = portal.split(":")[0]
-        res = self.run(f"dev=$(ip route get {addr} | awk '{{print $5}}'); ip link set $dev up; echo $dev")
+        res = self.run(
+            f"dev=$(ip route get {addr} | awk '{{print $5}}'); ip link set $dev up; echo $dev"
+        )
         return {"ok": res.ok, "portal": portal, "device": res.stdout.strip()}
 
     def io_probe(self) -> dict[str, Any]:

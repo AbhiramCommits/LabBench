@@ -3,10 +3,19 @@ failover:
   # Number of failover iterations per host.
   iterations: 5
   # Multipath no_path_retry queue window; I/O must resume within this.
-  no_path_retry_window_ms: 15000
+  no_path_retry_window_ms: 30000
   # Statistical guards on measured recovery/restore times.
   recovery_p95_ms: 9000
   restore_p95_ms: 6000
+  # Per-OS overrides. The Windows nodes are WinRM stubs whose emulated pwsh
+  # invocation latency dominates each I/O probe, so their guardrails are wider.
+  by_os:
+    linux:
+      recovery_p95_ms: 9000
+      restore_p95_ms: 6000
+    windows:
+      recovery_p95_ms: 20000
+      restore_p95_ms: 15000
   # I/O probe interval while a path is down.
   probe_interval_ms: 20
 

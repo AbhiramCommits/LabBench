@@ -1,6 +1,5 @@
 """I/O integrity: write/read a large block, verify checksum, check throughput."""
 
-
 from __future__ import annotations
 
 import pytest

@@ -1,0 +1,23 @@
+---
+# LabBench is deliberately explicit and uses `raw` PowerShell for the Windows
+# WinRM-stub nodes (see ansible/roles/common_windows). The noisy rules that do
+# not apply to this lab are disabled here.
+profile: null
+skip_list:
+  - command-instead-of-module
+  - command-instead-of-shell
+  - no-changed-when
+  - risky-file-permissions
+  - var-naming[no-role-prefix]
+  - var-naming[pattern]
+  - name[casing]
+  - name[template]
+  - schema[meta]
+  - schema[playbook]
+  - role-name
+  - galaxy
+  - yaml[line-length]
+  - jinja[spacing]
+exclude_paths:
+  - .fact_cache/
+  - .cache/

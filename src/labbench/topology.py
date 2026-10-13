@@ -58,7 +58,7 @@ class Lun:
     backstore: str = "fileio"
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], where: str) -> "Lun":
+    def from_dict(cls, data: dict[str, Any], where: str) -> Lun:
         if not isinstance(data, dict):
             raise LabSchemaError(f"{where}: expected a mapping")
         return cls(
@@ -100,7 +100,7 @@ class Host:
         return f"{self.address}:{self.port}"
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], where: str) -> "Host":
+    def from_dict(cls, data: dict[str, Any], where: str) -> Host:
         if not isinstance(data, dict):
             raise LabSchemaError(f"{where}: expected a mapping")
 
@@ -156,7 +156,7 @@ class Target:
         return len(self.portals)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], where: str) -> "Target":
+    def from_dict(cls, data: dict[str, Any], where: str) -> Target:
         if not isinstance(data, dict):
             raise LabSchemaError(f"{where}: expected a mapping")
 
@@ -187,7 +187,7 @@ class Target:
         raw_luns = data.get("luns")
         if not isinstance(raw_luns, list) or not raw_luns:
             raise LabSchemaError(f"{where}.luns: expected a non-empty list of LUNs")
-        luns = [Lun.from_dict(l, f"{where}.luns[{i}]") for i, l in enumerate(raw_luns)]
+        luns = [Lun.from_dict(item, f"{where}.luns[{i}]") for i, item in enumerate(raw_luns)]
 
         ids = [lun.id for lun in luns]
         if len(ids) != len(set(ids)):
@@ -231,7 +231,7 @@ class Lab:
         return [h for h in self.hosts if h.os_family == os_family]
 
     @classmethod
-    def from_dict(cls, data: Any) -> "Lab":
+    def from_dict(cls, data: Any) -> Lab:
         if not isinstance(data, dict):
             raise LabSchemaError("document root: expected a mapping")
 

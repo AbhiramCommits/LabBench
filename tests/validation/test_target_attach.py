@@ -1,6 +1,5 @@
 """Target attach: target discoverable, login, expected active paths, device."""
 
-
 from __future__ import annotations
 
 import pytest

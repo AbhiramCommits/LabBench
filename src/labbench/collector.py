@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import jsonschema
 
@@ -81,7 +82,9 @@ def _drift(host: Host, cfg: dict[str, Any], thresholds: dict[str, Any]) -> list[
         findings.append(f"{host.name}: multipath/MPIO not enabled")
     expected_iqn = f"iqn.2026-01.labbench:{host.name}"
     if cfg.get("initiator") != expected_iqn:
-        findings.append(f"{host.name}: initiator={cfg.get('initiator')!r} (expected {expected_iqn!r})")
+        findings.append(
+            f"{host.name}: initiator={cfg.get('initiator')!r} (expected {expected_iqn!r})"
+        )
     if host.is_windows:
         timeout = cfg.get("disk_timeout_s")
         if timeout is not None and timeout != thresholds["drift"]["disk_timeout_s"]:
@@ -163,7 +166,12 @@ def run_collect(
             inventory[host.name] = {"error": f"{type(exc).__name__}: {exc}"}
         finally:
             driver.close()
-        log_event(log, "collect_host", host=host.name, schema_valid=inventory[host.name].get("_schema_valid"))
+        log_event(
+            log,
+            "collect_host",
+            host=host.name,
+            schema_valid=inventory[host.name].get("_schema_valid"),
+        )
 
     payload = {
         "timestamp": paths.timestamp(),

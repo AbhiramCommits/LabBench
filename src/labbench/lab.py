@@ -212,7 +212,9 @@ def _uptime(by_service: dict[str, Any]) -> str | None:
     return None
 
 
-def down(lab: Lab, volumes: bool = True, prune_images: bool = False, quiet: bool = False) -> dict[str, Any]:
+def down(
+    lab: Lab, volumes: bool = True, prune_images: bool = False, quiet: bool = False
+) -> dict[str, Any]:
     """Tear the lab down and remove leftover containers/volumes."""
 
     containers = _count("container", "com.docker.compose.project")
@@ -227,10 +229,14 @@ def down(lab: Lab, volumes: bool = True, prune_images: bool = False, quiet: bool
     else:
         rc, out, err = _run(cmd)
         if rc != 0:
-            log_event(log, "compose_down_nonzero", level=logging.WARNING, rc=rc, err=err.strip()[-500:])
+            log_event(
+                log, "compose_down_nonzero", level=logging.WARNING, rc=rc, err=err.strip()[-500:]
+            )
 
     if prune_images:
-        subprocess.run(["docker", "image", "prune", "-f"], capture_output=True, text=True, check=False)
+        subprocess.run(
+            ["docker", "image", "prune", "-f"], capture_output=True, text=True, check=False
+        )
 
     log_event(log, "lab_down", containers=containers, networks=networks, volumes=vol_count)
     return {
@@ -242,9 +248,11 @@ def down(lab: Lab, volumes: bool = True, prune_images: bool = False, quiet: bool
 
 def _count(kind: str, label: str) -> int:
     rc, out, err = _run(
-        ["docker", kind, "ls", "-aq", "--filter", f"label={label}={PROJECT}"]
-        if kind == "container"
-        else ["docker", kind, "ls", "-q", "--filter", f"label={label}={PROJECT}"],
+        (
+            ["docker", kind, "ls", "-aq", "--filter", f"label={label}={PROJECT}"]
+            if kind == "container"
+            else ["docker", kind, "ls", "-q", "--filter", f"label={label}={PROJECT}"]
+        ),
         timeout=60,
     )
     if rc != 0:

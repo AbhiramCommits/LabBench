@@ -63,7 +63,10 @@ class FakeDriver(HostDriver):
 
     # -- iSCSI / multipath ----------------------------------------------- #
     def discover_targets(self, portal: str | None = None) -> dict[str, Any]:
-        return {"ok": True, "targets": [{"iqn": "iqn.2026-01.labbench:fake", "portals": ["pA", "pB"]}]}
+        return {
+            "ok": True,
+            "targets": [{"iqn": "iqn.2026-01.labbench:fake", "portals": ["pA", "pB"]}],
+        }
 
     def login(self, target: str, portals: list[str] | None = None) -> dict[str, Any]:
         return {"ok": True, "logged_in": portals or ["pA", "pB"]}
@@ -87,7 +90,11 @@ class FakeDriver(HostDriver):
 
     def write_verify(self, path: str, size_mb: int) -> dict[str, Any]:
         self._write_calls += 1
-        checksum = "corrupted-checksum-9999" if (self.corrupt and self._write_calls >= 2) else self.checksum
+        checksum = (
+            "corrupted-checksum-9999"
+            if (self.corrupt and self._write_calls >= 2)
+            else self.checksum
+        )
         return {
             "ok": checksum == self.checksum,
             "bytes": size_mb * 1024 * 1024,

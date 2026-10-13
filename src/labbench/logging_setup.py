@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import paths
@@ -47,7 +47,7 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, object] = {
-            "ts": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "ts": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "msg": record.getMessage(),
@@ -100,7 +100,9 @@ def get_logger(name: str = "labbench") -> logging.Logger:
     return logging.getLogger(name if name.startswith("labbench") else f"labbench.{name}")
 
 
-def log_event(logger: logging.Logger, msg: str, level: int = logging.INFO, **fields: object) -> None:
+def log_event(
+    logger: logging.Logger, msg: str, level: int = logging.INFO, **fields: object
+) -> None:
     """Log ``msg`` with structured ``fields`` attached to the JSON record."""
 
     logger.log(level, msg, extra=fields)
