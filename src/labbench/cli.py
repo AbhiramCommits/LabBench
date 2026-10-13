@@ -197,17 +197,17 @@ def provision(ctx: click.Context, limit: str | None, check: bool) -> None:
 
 
 @cli.command()
-@click.option("--iterations", default=None, type=int, help="Failover iterations (default: config).")
 @click.option("--host", "hosts", multiple=True, help="Limit to specific host name(s).")
+@click.option("--size-mb", default=None, type=int, help="I/O verification size (default: config).")
 @click.pass_context
-def attach(ctx: click.Context, iterations: int | None, hosts: tuple[str, ...]) -> None:
+def attach(ctx: click.Context, hosts: tuple[str, ...], size_mb: int | None) -> None:
     """Discover, login, mount iSCSI targets and verify multipath state."""
 
     from .workflows.attach import run_attach
 
     lab_obj = _load_lab_or_die(ctx)
-    result = run_attach(lab_obj, only=set(hosts) or None, iterations=iterations)
-    click.echo(f"attach: {result['ok']}/{result['total']} host(s) ready")
+    result = run_attach(lab_obj, only=set(hosts) or None, size_mb=size_mb)
+    click.echo(f"attach: {result['ok']}/{result['total']} host(s) ready (mode: {result['mode']})")
     for h in result["hosts"]:
         click.echo(
             f"  {h['host']:<14} paths={h['active_paths']} "

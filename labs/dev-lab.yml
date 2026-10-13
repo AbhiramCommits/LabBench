@@ -2,6 +2,7 @@ lab:
   name: dev-lab
   description: Mixed Linux/Windows iSCSI storage test lab (2 paths, 1 target)
   simulator_url: http://127.0.0.1:8080
+  simulator_url_internal: http://storage-target:8080
   networks:
     path-a: 172.28.0.0/24
     path-b: 172.29.0.0/24

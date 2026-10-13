@@ -1,0 +1,34 @@
+# LabBench thresholds and expectations.
+failover:
+  # Number of failover iterations per host.
+  iterations: 5
+  # Multipath no_path_retry queue window; I/O must resume within this.
+  no_path_retry_window_ms: 12000
+  # Statistical guards on measured recovery/restore times.
+  recovery_p95_ms: 8000
+  restore_p95_ms: 4000
+  # I/O probe interval while a path is down.
+  probe_interval_ms: 20
+
+io:
+  size_mb: 64
+  min_mbps: 5
+
+os:
+  linux:
+    expected_family: linux
+    version_range: ["20.04", "24.04"]
+  windows:
+    expected_family: windows
+    version_range: ["10.0", "10.1"]
+
+attach:
+  # Number of independent paths a healthy multipath/MPIO device must show.
+  expected_paths: 2
+  lun: 0
+
+drift:
+  # Expected values used to flag configuration drift.
+  disk_timeout_s: 60
+  path_count: 2
+  multipath_required: true
