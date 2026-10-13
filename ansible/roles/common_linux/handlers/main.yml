@@ -1,0 +1,18 @@
+---
+# Handlers are intentionally limited to non-systemd actions because the lab
+# hosts are containers. Real hosts with systemd will run these.
+- name: Reload multipath configuration
+  ansible.builtin.command: >
+    multipathd reconfigure
+  when:
+    - not (ansible_virtualization_type | default('') == 'docker')
+  changed_when: true
+  failed_when: false
+
+- name: Restart iscsid
+  ansible.builtin.service:
+    name: iscsid
+    state: restarted
+  when:
+    - not (ansible_virtualization_type | default('') == 'docker')
+  failed_when: false

@@ -1,0 +1,16 @@
+---
+# Sensible defaults for a Linux iSCSI initiator host. Overridden by
+# group_vars/linux.yml.
+labbench_packages:
+  - open-iscsi
+  - multipath-tools
+  - sg3-utils
+  - util-linux
+
+multipath:
+  user_friendly_names: "yes"
+  path_grouping_policy: failover
+  failback: immediate
+  no_path_retry: 12
+  path_checker: tur
+  polling_interval: 5

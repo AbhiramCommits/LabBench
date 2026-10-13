@@ -194,11 +194,16 @@ class WinRMStub:
         return envelope(f"{SHELL_URI}/CreateResponse", body, message_id)
 
     def _command(self, root: ET.Element, shell_id: str) -> bytes:
-        command_line = ""
+        command = ""
+        arguments = ""
         for el in root.iter():
             if local(el.tag) == "Command" and el.text:
-                command_line = el.text
-                break
+                command = el.text
+            elif local(el.tag) == "Arguments" and el.text:
+                arguments = el.text
+        command_line = command
+        if arguments:
+            command_line = f"{command} {arguments}".strip()
         command_id = str(uuid.uuid4()).upper()
         with self.lock:
             shell = self.shells.setdefault(shell_id or "default", Shell(shell_id or "default"))

@@ -1,0 +1,30 @@
+---
+# Single LabBench playbook: Linux over SSH, Windows over WinRM, plus the
+# storage target provisioned locally through its management API.
+#
+# group_vars are loaded explicitly so the files can live at ansible/group_vars
+# regardless of where the inventory script places its inventory directory.
+- name: Provision Linux storage hosts over SSH
+  hosts: linux
+  gather_facts: true
+  become: false
+  vars_files:
+    - ../group_vars/linux.yml
+  roles:
+    - common_linux
+    - tuning
+
+- name: Provision Windows storage hosts over WinRM
+  hosts: windows
+  gather_facts: false
+  vars_files:
+    - ../group_vars/windows.yml
+  roles:
+    - common_windows
+    - tuning
+
+- name: Provision the iSCSI storage target
+  hosts: storage
+  gather_facts: false
+  roles:
+    - storage_target

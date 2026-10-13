@@ -1,0 +1,28 @@
+---
+# /etc/multipath.conf - managed by LabBench (roles/common_linux).
+defaults {
+    user_friendly_names  {{ multipath.user_friendly_names }}
+    path_grouping_policy {{ multipath.path_grouping_policy }}
+    failback             {{ multipath.failback }}
+    no_path_retry        {{ multipath.no_path_retry }}
+    path_checker         {{ multipath.path_checker }}
+    polling_interval     {{ multipath.polling_interval }}
+    find_multipaths      yes
+}
+
+blacklist {
+    devnode "^(ram|raw|loop|fd|md|dm-|sr|scd|st)[0-9]*"
+    devnode "^hd[a-z]"
+    devnode "^vd[a-z]"
+}
+
+devices {
+    device {
+        vendor               "LabBench"
+        product              "iSCSI LUN"
+        path_grouping_policy failover
+        path_checker         tur
+        failback             immediate
+        no_path_retry        {{ multipath.no_path_retry }}
+    }
+}

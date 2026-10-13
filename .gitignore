@@ -30,6 +30,7 @@ logs/
 # Ansible
 ansible/*.retry
 ansible/roles/*/files/*.retry
+ansible/.fact_cache/
 *.retry
 
 # Docker

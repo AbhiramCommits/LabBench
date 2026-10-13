@@ -1,0 +1,19 @@
+# Linux host group variables.
+labbench_packages:
+  - open-iscsi
+  - multipath-tools
+  - sg3-utils
+  - util-linux
+  - lsscsi
+
+multipath:
+  user_friendly_names: "yes"
+  path_grouping_policy: failover
+  failback: immediate
+  no_path_retry: 12
+  path_checker: tur
+  polling_interval: 5
+  rr_weight: priorities
+
+disk_scheduler: mq-deadline
+queue_depth: 32

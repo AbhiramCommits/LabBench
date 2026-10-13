@@ -1,0 +1,7 @@
+# Windows host group variables.
+disk_timeout_s: 60
+mpio_load_balance: "Least Queue Depth"
+# The Windows nodes in the Docker lab are WinRM stubs backed by pwsh. When
+# `labbench_simulated_windows` is true the roles configure a simulated
+# registry/MPIO surface instead of touching the real Windows registry.
+labbench_simulated_windows: true

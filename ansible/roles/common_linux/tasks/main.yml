@@ -1,0 +1,42 @@
+---
+- name: Install iSCSI, multipath and tuning packages
+  ansible.builtin.apt:
+    name: "{{ labbench_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Configure /etc/multipath.conf
+  ansible.builtin.template:
+    src: multipath.conf.j2
+    dest: /etc/multipath.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Set iSCSI initiator name
+  ansible.builtin.copy:
+    content: "InitiatorName={{ labbench_initiator }}\n"
+    dest: /etc/iscsi/initiatorname.iscsi
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure LabBench runtime directory exists
+  ansible.builtin.file:
+    path: /etc/labbench
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Record provisioned lab identity
+  ansible.builtin.copy:
+    content: |
+      # Managed by LabBench (roles/common_linux)
+      initiator={{ labbench_initiator }}
+      container={{ labbench_container }}
+    dest: /etc/labbench/identity
+    owner: root
+    group: root
+    mode: "0644"

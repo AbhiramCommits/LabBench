@@ -1,0 +1,43 @@
+---
+# The storage target is provisioned through its management API so the role
+# works identically in `mode: real` (targetcli behind the API) and
+# `mode: simulated`. Every task is idempotent: the target is only (re)defined
+# when its IQN is missing.
+- name: Read current targets from the storage management API
+  ansible.builtin.uri:
+    url: "{{ labbench_simulator_url }}/targets"
+    return_content: true
+  register: sim_targets
+  changed_when: false
+
+- name: Define iSCSI target with LUNs (idempotent)
+  ansible.builtin.uri:
+    url: "{{ labbench_simulator_url }}/targets"
+    method: POST
+    body_format: json
+    body:
+      name: "{{ labbench_target_name | default('storage-target') }}"
+      iqn: "{{ labbench_target_iqn }}"
+      luns: "{{ labbench_target_luns }}"
+    status_code: [200, 201]
+  when: >-
+    (sim_targets.content | from_json).targets
+    | selectattr('iqn', 'equalto', labbench_target_iqn) | list | length == 0
+  changed_when: true
+
+- name: Verify both portals are present
+  ansible.builtin.uri:
+    url: "{{ labbench_simulator_url }}/portals"
+    return_content: true
+  register: sim_portals
+  changed_when: false
+  failed_when: >-
+    (sim_portals.content | from_json).portals | length
+    < (labbench_target_portals | length)
+
+- name: Report storage target definition
+  ansible.builtin.debug:
+    msg: >-
+      target={{ labbench_target_iqn }}
+      portals={{ labbench_target_portals | join(',') }}
+      luns={{ labbench_target_luns | length }}

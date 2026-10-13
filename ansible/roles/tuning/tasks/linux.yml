@@ -1,0 +1,23 @@
+---
+- name: Configure block I/O scheduler via udev
+  ansible.builtin.copy:
+    dest: /etc/udev/rules.d/60-labbench-scheduler.rules
+    content: |
+      # Managed by LabBench (roles/tuning)
+      ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd*", ATTR{queue/scheduler}="{{ disk_scheduler }}"
+      ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd*", ATTR{queue/nr_requests}="{{ queue_depth }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure sysctl tuning
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-labbench.conf
+    content: |
+      # Managed by LabBench (roles/tuning)
+      net.core.somaxconn = 1024
+      vm.dirty_ratio = 20
+      vm.dirty_background_ratio = 5
+    owner: root
+    group: root
+    mode: "0644"

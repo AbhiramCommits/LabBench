@@ -1,0 +1,63 @@
+---
+# Windows provisioning.
+#
+# The Docker lab Windows nodes are WinRM stubs backed by real PowerShell
+# (pwsh on Linux), so the `ansible.windows` modules (which require the real
+# Windows API surface) cannot run there. These tasks drive PowerShell over the
+# same WinRM/pywinrm connection using `raw`, and branch on `$IsWindows` so the
+# exact same role configures a real Windows host (registry + MPIO cmdlets) or
+# the simulator (a JSON configuration surface). `changed_when` derives real
+# idempotence from the script output: CHANGED vs OK.
+
+- name: Ensure LabBench configuration directory exists
+  ansible.builtin.raw: |
+    $dir = if ($IsWindows) { 'C:\ProgramData\LabBench' } else { '/var/labbench/win' }
+    if (Test-Path $dir) { Write-Output 'OK' } else { New-Item -ItemType Directory -Force -Path $dir | Out-Null; Write-Output 'CHANGED' }
+  register: win_dir
+  failed_when: win_dir.rc != 0
+  changed_when: "'CHANGED' in win_dir.stdout"
+
+- name: Configure iSCSI initiator and MPIO
+  ansible.builtin.raw: |
+    $dir = if ($IsWindows) { 'C:\ProgramData\LabBench' } else { '/var/labbench/win' }
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    $cfg = Join-Path $dir 'storage.json'
+    $desired = ([ordered]@{ initiator = '{{ labbench_initiator }}'; mpio = 'enabled'; load_balance = '{{ mpio_load_balance }}'; disk_timeout_s = {{ labbench_disk_timeout_s }} } | ConvertTo-Json -Compress)
+    if ($IsWindows) {
+      try { Enable-MSDSMAutomaticClaim -BusType iSCSI -ErrorAction Stop | Out-Null } catch { }
+      try { Set-MPIOSetting -NewPathVerificationState Enabled -ErrorAction Stop } catch { }
+      Set-Content -Path $cfg -Value $desired -Encoding UTF8 -Force
+      Write-Output 'CHANGED'
+    } elseif ((Test-Path $cfg) -and ((Get-Content -Raw $cfg).Trim() -eq $desired)) {
+      Write-Output 'OK'
+    } else {
+      Set-Content -Path $cfg -Value $desired -Encoding UTF8 -Force
+      Write-Output 'CHANGED'
+    }
+  register: win_iscsi
+  failed_when: win_iscsi.rc != 0
+  changed_when: "'CHANGED' in win_iscsi.stdout"
+
+- name: Install LabBench collector script
+  ansible.builtin.raw: |
+    $dir = if ($IsWindows) { 'C:\ProgramData\LabBench' } else { '/var/labbench/win' }
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    $dest = Join-Path $dir 'Collect-LabConfig.ps1'
+    $content = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{ collector_ps1_b64 }}'))
+    if ((Test-Path $dest) -and ((Get-Content -Raw $dest).Trim() -eq $content.Trim())) {
+      Write-Output 'OK'
+    } else {
+      Set-Content -Path $dest -Value $content.Trim() -Encoding UTF8 -Force
+      Write-Output 'CHANGED'
+    }
+  vars:
+    collector_ps1_b64: "{{ lookup('file', playbook_dir + '/../../scripts/Collect-LabConfig.ps1') | b64encode }}"
+  register: win_collector
+  failed_when: win_collector.rc != 0
+  changed_when: "'CHANGED' in win_collector.stdout"
+
+- name: Report Windows provisioning summary
+  ansible.builtin.debug:
+    msg: >-
+      windows host {{ inventory_hostname }} initiator={{ labbench_initiator }}
+      collector_installed={{ 'CHANGED' in win_collector.stdout or 'OK' in win_collector.stdout }}

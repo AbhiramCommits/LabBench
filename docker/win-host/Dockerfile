@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ansible.windows expect to invoke.
 RUN ln -sf /opt/microsoft/powershell/7/pwsh /usr/local/bin/powershell \
     && ln -sf /opt/microsoft/powershell/7/pwsh /usr/local/bin/powershell.exe \
+    && ln -sf /opt/microsoft/powershell/7/pwsh /usr/local/bin/PowerShell \
     && mkdir -p /var/labbench/mnt
 
 COPY docker/win-host/winrm_stub.py /opt/labbench/winrm_stub.py

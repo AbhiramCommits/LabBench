@@ -1,0 +1,8 @@
+---
+- name: Apply Linux tuning
+  ansible.builtin.include_tasks: linux.yml
+  when: host_os_family == 'linux'
+
+- name: Apply Windows tuning
+  ansible.builtin.include_tasks: windows.yml
+  when: host_os_family == 'windows'

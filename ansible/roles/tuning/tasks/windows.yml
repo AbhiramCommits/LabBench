@@ -1,0 +1,23 @@
+---
+# Disk timeout / queue tuning for Windows. On a real Windows host this sets
+# the Registry TimeOutValue; on the WinRM-stub lab node it writes the same
+# value to a JSON configuration surface so drift can be validated.
+- name: Set disk timeout (registry on Windows, JSON surface on stub)
+  ansible.builtin.raw: |
+    $dir = if ($IsWindows) { 'C:\ProgramData\LabBench' } else { '/var/labbench/win' }
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    $cfg = Join-Path $dir 'tuning.json'
+    $desired = ([ordered]@{ disk_timeout_s = {{ labbench_disk_timeout_s }}; scheduler = 'mq-deadline'; queue_depth = {{ queue_depth | default(32) }} } | ConvertTo-Json -Compress)
+    if ($IsWindows) {
+      Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Disk' -Name TimeOutValue -Value {{ labbench_disk_timeout_s }} -Type DWord -ErrorAction SilentlyContinue
+      Set-Content -Path $cfg -Value $desired -Encoding UTF8 -Force
+      Write-Output 'CHANGED'
+    } elseif ((Test-Path $cfg) -and ((Get-Content -Raw $cfg).Trim() -eq $desired)) {
+      Write-Output 'OK'
+    } else {
+      Set-Content -Path $cfg -Value $desired -Encoding UTF8 -Force
+      Write-Output 'CHANGED'
+    }
+  register: win_tuning
+  failed_when: win_tuning.rc != 0
+  changed_when: "'CHANGED' in win_tuning.stdout"
