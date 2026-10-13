@@ -48,7 +48,13 @@ class WindowsWinRMDriver(HostDriver):
 
     def run(self, cmd: str) -> CommandResult:
         res = self._session().run_ps(cmd)
-        return CommandResult(res.std_out or "", res.std_err or "", res.status_code)
+        out = res.std_out or ""
+        err = res.std_err or ""
+        if isinstance(out, bytes):
+            out = out.decode("utf-8", errors="replace")
+        if isinstance(err, bytes):
+            err = err.decode("utf-8", errors="replace")
+        return CommandResult(out, err, res.status_code)
 
     # -- agent helper ----------------------------------------------------- #
     def _agent(self, action: str, **params: Any) -> dict[str, Any]:

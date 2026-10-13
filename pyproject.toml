@@ -47,9 +47,10 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = '-ra -m "not validation and not integration"'
 markers = [
     "integration: tests that require a running Docker lab",
+    "validation: cross-OS validation suite run via `labbench validate`",
     "e2e: full end-to-end lab tests",
 ]
 timeout = 900

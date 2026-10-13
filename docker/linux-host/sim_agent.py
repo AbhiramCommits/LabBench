@@ -123,6 +123,7 @@ def action_disks(args: argparse.Namespace) -> dict[str, Any]:
             }
         ],
         "multipath": {
+            "enabled": True,
             "path_grouping_policy": "failover",
             "no_path_retry": 12,
             "failback": "immediate",

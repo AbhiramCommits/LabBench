@@ -121,6 +121,20 @@ class HostDriver(ABC):
     def close(self) -> None:  # pragma: no cover - default no-op
         ...
 
+    def utc_epoch(self) -> int:
+        """Return the host's current UTC time as a Unix epoch (for time sync)."""
+
+        if self.os_family == "windows":
+            res = self.run("[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()")
+        else:
+            res = self.run("date +%s")
+        text = (res.stdout or "").strip().splitlines()
+        for line in reversed(text):
+            line = line.strip()
+            if line.lstrip("-").isdigit():
+                return int(line)
+        raise DriverError(f"{self.name}: could not read host time: {res.stderr!r}")
+
     # -- shared helpers --------------------------------------------------- #
     def active_paths(self, target: str | None = None) -> int:
         return int(self.paths(target).get("active_paths", 0))

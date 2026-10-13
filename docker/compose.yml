@@ -49,8 +49,8 @@ services:
     hostname: storage-target
     privileged: true
     environment:
-      LABBENCH_FAILOVER_DELAY_MS: "2000"
-      LABBENCH_RESTORE_DELAY_MS: "1200"
+      LABBENCH_FAILOVER_DELAY_MS: "4000"
+      LABBENCH_RESTORE_DELAY_MS: "1500"
       LABBENCH_JITTER: "0.15"
       LABBENCH_PORTAL_A: "172.28.0.10:3260"
       LABBENCH_PORTAL_B: "172.29.0.10:3260"

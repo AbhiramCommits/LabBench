@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LabBench lab configuration inventory",
+  "description": "Schema shared by scripts/collect_lab_config.sh (Linux) and scripts/Collect-LabConfig.ps1 (Windows).",
+  "type": "object",
+  "required": [
+    "hostname",
+    "os_family",
+    "os_version",
+    "kernel",
+    "cpu_count",
+    "mem_mb",
+    "disks",
+    "multipath",
+    "initiator",
+    "drivers",
+    "timestamp"
+  ],
+  "properties": {
+    "hostname": { "type": "string", "minLength": 1 },
+    "os_family": { "type": "string", "enum": ["linux", "windows"] },
+    "os_version": { "type": "string" },
+    "kernel": { "type": "string" },
+    "cpu_count": { "type": "integer", "minimum": 0 },
+    "mem_mb": { "type": "integer", "minimum": 0 },
+    "disks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "size_gb", "model", "path_count", "paths", "mountpoint"],
+        "properties": {
+          "name": { "type": ["string", "null"] },
+          "size_gb": { "type": ["integer", "null"] },
+          "model": { "type": ["string", "null"] },
+          "path_count": { "type": "integer", "minimum": 0 },
+          "paths": { "type": "array" },
+          "mountpoint": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "multipath": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": { "enabled": { "type": "boolean" } },
+      "additionalProperties": true
+    },
+    "initiator": { "type": "string" },
+    "disk_timeout_s": { "type": ["integer", "null"] },
+    "drivers": { "type": "object", "additionalProperties": true },
+    "simulated": { "type": "boolean" },
+    "timestamp": { "type": "string" }
+  },
+  "additionalProperties": true
+}

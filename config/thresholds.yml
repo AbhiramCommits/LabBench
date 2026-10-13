@@ -3,10 +3,10 @@ failover:
   # Number of failover iterations per host.
   iterations: 5
   # Multipath no_path_retry queue window; I/O must resume within this.
-  no_path_retry_window_ms: 12000
+  no_path_retry_window_ms: 15000
   # Statistical guards on measured recovery/restore times.
-  recovery_p95_ms: 8000
-  restore_p95_ms: 4000
+  recovery_p95_ms: 9000
+  restore_p95_ms: 6000
   # I/O probe interval while a path is down.
   probe_interval_ms: 20
 

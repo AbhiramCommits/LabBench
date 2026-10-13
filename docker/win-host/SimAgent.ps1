@@ -92,6 +92,7 @@ switch ($Action) {
                 mountpoint   = $MountRoot
             })
             multipath = [ordered]@{
+                enabled      = $true
                 mpio_enabled = $true
                 load_balance = 'Least Queue Depth'
             }

@@ -12,9 +12,9 @@ from . import paths
 DEFAULTS: dict[str, Any] = {
     "failover": {
         "iterations": 5,
-        "no_path_retry_window_ms": 12000,
-        "recovery_p95_ms": 8000,
-        "restore_p95_ms": 4000,
+        "no_path_retry_window_ms": 15000,
+        "recovery_p95_ms": 9000,
+        "restore_p95_ms": 6000,
         "probe_interval_ms": 20,
     },
     "io": {"size_mb": 64, "min_mbps": 5},
