@@ -98,3 +98,9 @@ def setup_logging(level: str = "INFO", log_file: Path | None = None) -> logging.
 
 def get_logger(name: str = "labbench") -> logging.Logger:
     return logging.getLogger(name if name.startswith("labbench") else f"labbench.{name}")
+
+
+def log_event(logger: logging.Logger, msg: str, level: int = logging.INFO, **fields: object) -> None:
+    """Log ``msg`` with structured ``fields`` attached to the JSON record."""
+
+    logger.log(level, msg, extra=fields)

@@ -1,0 +1,134 @@
+# LabBench Docker lab: a mixed Linux/Windows iSCSI storage lab.
+#
+# Two storage networks (path-a / path-b) model the two iSCSI portals so a
+# single path can be severed independently, plus the management traffic riding
+# on path-a. Every host is attached to both storage networks.
+#
+# Note: linux/win hosts share a single image; the image is *built* by the -1
+# service and *referenced* by the -2 service to avoid concurrent BuildKit
+# writes to the same tag.
+name: labbench
+
+x-linux-host: &linux-host
+  image: labbench/linux-host:latest
+  privileged: true
+  healthcheck:
+    test: ["CMD", "python3", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); sys.exit(0 if s.connect_ex(('127.0.0.1',22))==0 else 1)"]
+    interval: 5s
+    timeout: 3s
+    retries: 30
+    start_period: 5s
+
+x-win-host: &win-host
+  image: labbench/win-host:latest
+  healthcheck:
+    test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5985/health',timeout=3).status==200 else 1)"]
+    interval: 5s
+    timeout: 3s
+    retries: 40
+    start_period: 10s
+
+networks:
+  path-a:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+  path-b:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+
+services:
+  storage-target:
+    image: labbench/storage-target:latest
+    build:
+      context: ..
+      dockerfile: docker/storage-target/Dockerfile
+    hostname: storage-target
+    privileged: true
+    environment:
+      LABBENCH_FAILOVER_DELAY_MS: "2000"
+      LABBENCH_RESTORE_DELAY_MS: "1200"
+      LABBENCH_JITTER: "0.15"
+      LABBENCH_PORTAL_A: "172.28.0.10:3260"
+      LABBENCH_PORTAL_B: "172.29.0.10:3260"
+      LABBENCH_TARGET_NAME: "storage-target"
+      LABBENCH_TARGET_IQN: "iqn.2026-01.labbench:storage.target1"
+    ports:
+      - "8080:8080"
+      - "3260:3260"
+    networks:
+      path-a:
+        ipv4_address: 172.28.0.10
+      path-b:
+        ipv4_address: 172.29.0.10
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=3).status==200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  linux-host-1:
+    <<: *linux-host
+    hostname: linux-host-1
+    build:
+      context: ..
+      dockerfile: docker/linux-host/Dockerfile
+    environment:
+      LABBENCH_INITIATOR: "iqn.2026-01.labbench:linux-host-1"
+      LABBENCH_SIMULATOR: "http://storage-target:8080"
+    ports:
+      - "2201:22"
+    networks:
+      path-a:
+        ipv4_address: 172.28.0.21
+      path-b:
+        ipv4_address: 172.29.0.21
+
+  linux-host-2:
+    <<: *linux-host
+    hostname: linux-host-2
+    environment:
+      LABBENCH_INITIATOR: "iqn.2026-01.labbench:linux-host-2"
+      LABBENCH_SIMULATOR: "http://storage-target:8080"
+    ports:
+      - "2202:22"
+    networks:
+      path-a:
+        ipv4_address: 172.28.0.22
+      path-b:
+        ipv4_address: 172.29.0.22
+
+  win-host-1:
+    <<: *win-host
+    hostname: win-host-1
+    build:
+      context: ..
+      dockerfile: docker/win-host/Dockerfile
+    environment:
+      LABBENCH_INITIATOR: "iqn.2026-01.labbench:win-host-1"
+      LABBENCH_SIMULATOR: "http://storage-target:8080"
+    ports:
+      - "55985:5985"
+    networks:
+      path-a:
+        ipv4_address: 172.28.0.31
+      path-b:
+        ipv4_address: 172.29.0.31
+
+  win-host-2:
+    <<: *win-host
+    hostname: win-host-2
+    environment:
+      LABBENCH_INITIATOR: "iqn.2026-01.labbench:win-host-2"
+      LABBENCH_SIMULATOR: "http://storage-target:8080"
+    ports:
+      - "55986:5985"
+    networks:
+      path-a:
+        ipv4_address: 172.28.0.32
+      path-b:
+        ipv4_address: 172.29.0.32
