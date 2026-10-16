@@ -1,8 +1,9 @@
 # LabBench - developer entry points
 SHELL := /bin/bash
-VENV := .venv
-PY := $(VENV)/bin/python
-LABBENCH := $(VENV)/bin/labbench
+# Override for a non-venv install, e.g. `make lab-up LABBENCH=labbench`.
+VENV ?= .venv
+PY ?= $(VENV)/bin/python
+LABBENCH ?= $(VENV)/bin/labbench
 
 .PHONY: install lint format test test-integration test-all lab-up lab-down e2e clean
 
